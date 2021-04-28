@@ -8,7 +8,8 @@ const createWindow = () => {
         height: 600,
         webPreferences: {
           preload: join(__dirname, "preload.js"),
-        }
+        },
+        resizable: false
     });
     
     win.loadFile(join(__dirname, `/dist/index.html`));
