@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ContactsService } from './services/contacts.service';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,12 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'foundry-address-book-exercise';
+
+  constructor(private contactsService: ContactsService){
+  }
+  
+  getContacts(){
+    this.contactsService.getContacts().then(contacts => console.table(contacts));
+  }
+
 }

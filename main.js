@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const { join } = require("path");
 
 // create a window with 600x800 dimensions and load root file index.html
@@ -7,13 +7,32 @@ const createWindow = () => {
         width: 800,
         height: 600,
         webPreferences: {
-          preload: join(__dirname, "preload.js"),
+            // added nodeIntegration as true and contextIsolation as false for enabling
+            // require in contacts.service to make use of ipcRenderer from electron
+            nodeIntegration: true,
+            contextIsolation: false,
+            preload: join(__dirname, "preload.js"),
         },
         resizable: false
     });
     
     win.loadFile(join(__dirname, `/dist/index.html`));
 };
+
+ipcMain.handle('get-contacts', async (event, ...args) => {
+    // const result = await somePromise(...args)
+    await new Promise(res => setTimeout(() => res(), 3000));
+    return [
+        {
+            firstName: 'Baljinder',
+            lastName: 'Singh'
+        },
+        {
+            firstName: 'Baljinder',
+            lastName: 'Singh'
+        }
+    ];
+})
 
 // when application is ready then create a new window
 // and  listen for activate event which would create 
