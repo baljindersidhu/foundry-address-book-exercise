@@ -13,7 +13,15 @@ export class AppComponent {
   }
   
   getContacts(){
-    this.contactsService.getContacts().then(contacts => console.table(contacts));
+    this.contactsService.getContacts(1, 10).then(contacts => console.table(contacts));
+  }
+
+  addContact(){
+    this.contactsService.addContact('Random', 'Chikkibum', '916978856435').then(() => console.log('saved this'));
+  }
+
+  removeContact(){
+    
   }
 
 }

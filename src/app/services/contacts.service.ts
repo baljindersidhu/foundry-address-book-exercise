@@ -14,9 +14,30 @@ export class ContactsService {
     this._ipc = electron.ipcRenderer;
   }
 
-  async getContacts(): Promise<Contact[]>{
-    const contacts = await this._ipc.invoke('get-contacts');
+  /**
+   * 
+   * @param pageNumber 
+   * @param pageSize 
+   * @param orderBy 
+   * @param searchTerm 
+   * @returns 
+   */
+  async getContacts(pageNumber: number, pageSize: number, orderBy ?: string, searchTerm ?: string): Promise<Contact[]>{
+    const contacts = await this._ipc.invoke('get-contacts', JSON.stringify({
+      pageNumber: pageNumber,
+      pageSize: pageSize,
+      orderBy: orderBy,
+      searchTerm: searchTerm
+    }));
     return contacts;
+  }
+
+  addContact(firstName: string, lastName: string, phoneNumber: string): Promise<void>{
+    return this._ipc.invoke('add-contact', JSON.stringify({
+      firstName: firstName,
+      lastName: lastName,
+      phoneNumber: phoneNumber
+    }));
   }
 
 }

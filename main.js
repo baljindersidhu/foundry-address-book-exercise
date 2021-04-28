@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const { join } = require("path");
 const { fork } = require('child_process');
-const contactsService = fork(join(__dirname, "electron-scripts/get-contacts.js"));
+const ContactsRepository = fork(join(__dirname, "electron-scripts/contacts-repository.js"));
 
 // create a window with 600x800 dimensions and load root file index.html
 const createWindow = () => {
@@ -21,14 +21,50 @@ const createWindow = () => {
     win.loadFile(join(__dirname, `/dist/index.html`));
 };
 
-ipcMain.handle('get-contacts', async (event, ...args) => {
-    contactsService.send('start');
+ipcMain.handle('get-contacts', async (event, args) => {
+    const details = JSON.parse(args);
+    ContactsRepository.send({
+        method: 'GET',
+        details: {
+            pageNumber: details.pageNumber,
+            pageSize: details.pageSize,
+            sort: {
+                key: details.orderBy
+            },
+            search: details.searchTerm
+        }
+    });
     return new Promise((resolve, reject) => {
-        contactsService.on('message', contacts => {
+        ContactsRepository.on('message', contacts => {
+            ContactsRepository.removeAllListeners();
             resolve(contacts);
         });
 
-        contactsService.on('error', error => {
+        ContactsRepository.on('error', error => {
+            ContactsRepository.removeAllListeners();
+            reject(error);
+        });
+    });
+});
+
+ipcMain.handle('add-contact', async (event, ...args) => {
+    const details = JSON.parse(args);
+    ContactsRepository.send({
+        method: 'ADD',
+        details: {
+            firstName: details.firstName,
+            lastName: details.lastName,
+            phoneNumber: details.phoneNumber
+        }
+    });
+    return new Promise((resolve, reject) => {
+        ContactsRepository.on('message', contacts => {
+            ContactsRepository.removeAllListeners();
+            resolve(contacts);
+        });
+
+        ContactsRepository.on('error', error => {
+            ContactsRepository.removeAllListeners();
             reject(error);
         });
     });
@@ -52,6 +88,6 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin"){
       app.quit();
-      contactsService.kill('SIGINT');
+      ContactsRepository.kill('SIGINT');
   }
 });
