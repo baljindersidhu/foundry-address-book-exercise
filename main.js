@@ -1,5 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const { join } = require("path");
+const { fork } = require('child_process');
+const contactsService = fork(join(__dirname, "electron-scripts/get-contacts.js"));
 
 // create a window with 600x800 dimensions and load root file index.html
 const createWindow = () => {
@@ -20,19 +22,17 @@ const createWindow = () => {
 };
 
 ipcMain.handle('get-contacts', async (event, ...args) => {
-    // const result = await somePromise(...args)
-    await new Promise(res => setTimeout(() => res(), 3000));
-    return [
-        {
-            firstName: 'Baljinder',
-            lastName: 'Singh'
-        },
-        {
-            firstName: 'Baljinder',
-            lastName: 'Singh'
-        }
-    ];
-})
+    contactsService.send('start');
+    return new Promise((resolve, reject) => {
+        contactsService.on('message', contacts => {
+            resolve(contacts);
+        });
+
+        contactsService.on('error', error => {
+            reject(error);
+        });
+    });
+});
 
 // when application is ready then create a new window
 // and  listen for activate event which would create 
@@ -50,5 +50,8 @@ app.whenReady().then(() => {
 // quit app when all windows are closed except on Mac OS devices
 // since it doens't destroy the app on closing
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  if (process.platform !== "darwin"){
+      app.quit();
+      contactsService.kill('SIGINT');
+  }
 });
